@@ -2,18 +2,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-// Kod Ÿród³owy vertex shadera
-const char* vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"void main() {\n"
-"    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"}\0";
-// Kod Ÿród³owy fragment shadera
-const char* fragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main() {\n"
-"    FragColor = vec4(0.8f, 0.3f, 0.02f, 1.0f);\n"
-"}\n\0";
+#include "shaderClass.h"
+#include "VAO.h"
+#include "VBO.h"
+#include "EBO.h"
 
 int main() {
     // Inicjalizacja GLFW
@@ -58,67 +50,24 @@ int main() {
     // Ustalamy viewport naszego okna OpenGL
     glViewport(0, 0, 800, 800);
 
-    // Tworzenie vertex shadera
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    // Za³¹czenie kodu Ÿród³owego vertex shadera do obiektu
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    // Kompilacja vertex shadera na kod maszynowy
-    glCompileShader(vertexShader);
+    // Tworzenie obiektu shader
+    Shader shaderProgram("default.vert", "default.frag");
 
-    // Tworzenie fragment shadera
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    // Za³¹czenie kodu Ÿród³owego fragment shadera do obiektu
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    // Kompilacja fragment shadera na kod maszynowy
-    glCompileShader(fragmentShader);
+    // Tworzenie Vertex Array Object i bindowanie go
+    VAO VAO1;
+    VAO1.Bind();
 
-    // Tworzenie programu shadera
-    GLuint shaderProgram = glCreateProgram();
-    // Za³¹czenie vertex i fragment shaderów do programu
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    // Po³¹czenie shaderów w shader programie
-    glLinkProgram(shaderProgram);
+    // Tworzenie Vertex Buffer Object
+    VBO VBO1(vertices, sizeof(vertices));
+    // Tworzenie Element Buffer Object
+    EBO EBO1(indices, sizeof(indices));
 
-    // Usuniêcie niepotrzebnych shaderów
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    // Tworzenie Vertex Array Object i Vertex Buffer Object
-    GLuint VAO, VBO, EBO;
-
-    // Generowanie VAO i VBO z 1 obiektem
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    // Bindowanie VEO jako obecny Vertex Array Object
-    glBindVertexArray(VAO);
-
-    // Bindowanie VBO
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // Przedstawienie wierzcho³ków VBO
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // Konfiguracja atrybutów aby OpenGL wiedzia³ jak odczytaæ VBO
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    // W³¹czenie atrybutów aby OpenGL wiedzia³ ¿eby ich u¿yæ
-    glEnableVertexAttribArray(0);
-
-    // Bindowanie VBO i VAO do 0 ¿eby ich przez przypadek nie zmodyfikowaæ
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    // Ustalamy kolor t³a
-    glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
-    // Czyœcimy tylny buffer i przypisujemy mu nowy kolor
-    glClear(GL_COLOR_BUFFER_BIT);
-    // Zamieniamy buffer tylny z przednim
-    glfwSwapBuffers(window);
+    // Po³¹czenie VBO do VAO
+    VAO1.LinkVBO(VBO1, 0);
+    // Odbindowanie wszystkiego aby zapobiec przypadkowej modyfikacji
+    VAO1.Unbind();
+    VBO1.Unbind();
+    EBO1.Unbind();
 
     // G³ówna pêtla while
     while (!glfwWindowShouldClose(window)) {
@@ -126,9 +75,9 @@ int main() {
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         // Powiedzenie OpenGL, którego programu shader u¿yæ
-        glUseProgram(shaderProgram);
+        shaderProgram.Activate();
         //Bindowanie VAO aby OpenGL wiedzia³ ¿eby go u¿yæ
-        glBindVertexArray(VAO);
+        VAO1.Bind();
         // Rysowanie trójk¹ta
         glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
         glfwSwapBuffers(window);
@@ -138,10 +87,10 @@ int main() {
     }
 
     // Usuniêcie wszystkich stworzonych obiektów
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-    glDeleteProgram(shaderProgram);
+    VAO1.Delete();
+    VBO1.Delete();
+    EBO1.Delete();
+    shaderProgram.Delete();
 
     // Usuwamy okno przed zakoñczeniem programu
     glfwDestroyWindow(window);
