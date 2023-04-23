@@ -29,7 +29,16 @@ int main() {
     GLfloat vertices[] = {
         -0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lewy dolny róg
         0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Prawy dolny róg
-        0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f // Górny róg
+        0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f, // Górny róg
+        -0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Œrodkowy lewy
+        0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Œrodkowy prawy
+        0.0f, -0.5f * float(sqrt(3)) / 3, 0.0f // Œrodkowy dolny
+    };
+
+    GLuint indices[] = {
+        0, 3, 5, // Lewy dolny trójk¹t
+        3, 2, 4, // Prawy dolny trójk¹t
+        5, 4, 1 // Górny trójk¹t
     };
 
     // Tworzymy objekt GLFW 800x800 px i nazywamy go "OpenGL - projekt"
@@ -76,11 +85,12 @@ int main() {
     glDeleteShader(fragmentShader);
 
     // Tworzenie Vertex Array Object i Vertex Buffer Object
-    GLuint VAO, VBO;
+    GLuint VAO, VBO, EBO;
 
     // Generowanie VAO i VBO z 1 obiektem
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
     // Bindowanie VEO jako obecny Vertex Array Object
     glBindVertexArray(VAO);
@@ -90,6 +100,9 @@ int main() {
     // Przedstawienie wierzcho³ków VBO
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
     // Konfiguracja atrybutów aby OpenGL wiedzia³ jak odczytaæ VBO
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     // W³¹czenie atrybutów aby OpenGL wiedzia³ ¿eby ich u¿yæ
@@ -98,6 +111,7 @@ int main() {
     // Bindowanie VBO i VAO do 0 ¿eby ich przez przypadek nie zmodyfikowaæ
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     // Ustalamy kolor t³a
     glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
@@ -116,7 +130,7 @@ int main() {
         //Bindowanie VAO aby OpenGL wiedzia³ ¿eby go u¿yæ
         glBindVertexArray(VAO);
         // Rysowanie trójk¹ta
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
         glfwSwapBuffers(window);
 
         // Ogarniamy wszystkie eventy GLFW
@@ -126,6 +140,7 @@ int main() {
     // Usuniêcie wszystkich stworzonych obiektów
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
 
     // Usuwamy okno przed zakoñczeniem programu
