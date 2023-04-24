@@ -1,7 +1,9 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <stb/stb_image.h>
 
+#include "Texture.h"
 #include "shaderClass.h"
 #include "VAO.h"
 #include "VBO.h"
@@ -19,18 +21,15 @@ int main() {
 
     // Koordynaty wierzcho³ków
     GLfloat vertices[] = {
-        -0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f,    0.8f, 0.3f, 0.02f, // Lewy dolny róg
-        0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f,    0.8f, 0.3f, 0.02f, // Prawy dolny róg
-        0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f,    1.0f, 0.6f, 0.32f, // Górny róg
-        -0.25f, 0.5f * float(sqrt(3)) / 6, 0.0f,    0.9f, 0.45f, 0.17f, // Œrodkowy lewy
-        0.25f, 0.5f * float(sqrt(3)) / 6, 0.0f,    0.9f, 0.45f, 0.17f, // Œrodkowy prawy
-        0.0f, -0.5f * float(sqrt(3)) / 3, 0.0f,    0.8f, 0.3f, 0.02f // Œrodkowy dolny
+        -0.5f, -0.5f, 0.0f,    1.0f, 0.0f, 0.0f,    0.0f, 0.0f, // Lewy dolny róg
+        -0.5f, 0.5f, 0.0f,    0.0f, 1.0f, 0.0f,    0.0f, 1.0f, // Lewy górny róg
+        0.5f, 0.5f, 0.0f,    0.0f, 0.0f, 1.0f,    1.0f, 1.0f, // Prawy górny róg
+        0.5f, -0.5f, 0.0f,    1.0f, 1.0f, 1.0f,    1.0f, 0.0f // Prawy dolny lewy
     };
 
     GLuint indices[] = {
-        0, 3, 5, // Lewy dolny trójk¹t
-        3, 2, 4, // Prawy dolny trójk¹t
-        5, 4, 1 // Górny trójk¹t
+        0, 2, 1, // Górny trójk¹t
+        0, 3, 2 // Dolny trójk¹t
     };
 
     // Tworzymy objekt GLFW 800x800 px i nazywamy go "OpenGL - projekt"
@@ -63,8 +62,9 @@ int main() {
     EBO EBO1(indices, sizeof(indices));
 
     // Po³¹czenie atrybutów VBO takich jak koordynaty i kolory do VAO
-    VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 6 * sizeof(float), (void*)0);
-    VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 8 * sizeof(float), (void*)0);
+    VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     // Odbindowanie wszystkiego aby zapobiec przypadkowej modyfikacji
     VAO1.Unbind();
     VBO1.Unbind();
@@ -72,6 +72,10 @@ int main() {
 
     // Zdobycie ID uniformu nazwanego "scale"
     GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
+
+    // Tekstura
+    Texture popCat("pop_cat.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+    popCat.texUnit(shaderProgram, "tex0", 0);
 
     // G³ówna pêtla while
     while (!glfwWindowShouldClose(window)) {
@@ -82,10 +86,11 @@ int main() {
         shaderProgram.Activate();
         // Przypisanie wartoœci uniformowi; ZAWSZE PO aktywacji shader programu
         glUniform1f(uniID, 0.5f);
+        popCat.Bind();
         //Bindowanie VAO aby OpenGL wiedzia³ ¿eby go u¿yæ
         VAO1.Bind();
         // Rysowanie trójk¹ta
-        glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glfwSwapBuffers(window);
 
         // Ogarniamy wszystkie eventy GLFW
@@ -96,6 +101,7 @@ int main() {
     VAO1.Delete();
     VBO1.Delete();
     EBO1.Delete();
+    popCat.Delete();
     shaderProgram.Delete();
 
     // Usuwamy okno przed zakoñczeniem programu
