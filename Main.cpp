@@ -19,12 +19,12 @@ int main() {
 
     // Koordynaty wierzcho³ków
     GLfloat vertices[] = {
-        -0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lewy dolny róg
-        0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Prawy dolny róg
-        0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f, // Górny róg
-        -0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Œrodkowy lewy
-        0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Œrodkowy prawy
-        0.0f, -0.5f * float(sqrt(3)) / 3, 0.0f // Œrodkowy dolny
+        -0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f,    0.8f, 0.3f, 0.02f, // Lewy dolny róg
+        0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f,    0.8f, 0.3f, 0.02f, // Prawy dolny róg
+        0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f,    1.0f, 0.6f, 0.32f, // Górny róg
+        -0.25f, 0.5f * float(sqrt(3)) / 6, 0.0f,    0.9f, 0.45f, 0.17f, // Œrodkowy lewy
+        0.25f, 0.5f * float(sqrt(3)) / 6, 0.0f,    0.9f, 0.45f, 0.17f, // Œrodkowy prawy
+        0.0f, -0.5f * float(sqrt(3)) / 3, 0.0f,    0.8f, 0.3f, 0.02f // Œrodkowy dolny
     };
 
     GLuint indices[] = {
@@ -63,11 +63,14 @@ int main() {
     EBO EBO1(indices, sizeof(indices));
 
     // Po³¹czenie VBO do VAO
-    VAO1.LinkVBO(VBO1, 0);
+    VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 6 * sizeof(float), (void*)0);
+    VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     // Odbindowanie wszystkiego aby zapobiec przypadkowej modyfikacji
     VAO1.Unbind();
     VBO1.Unbind();
     EBO1.Unbind();
+
+    GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
 
     // G³ówna pêtla while
     while (!glfwWindowShouldClose(window)) {
@@ -76,6 +79,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
         // Powiedzenie OpenGL, którego programu shader u¿yæ
         shaderProgram.Activate();
+        glUniform1f(uniID, 2.0f);
         //Bindowanie VAO aby OpenGL wiedzia³ ¿eby go u¿yæ
         VAO1.Bind();
         // Rysowanie trójk¹ta

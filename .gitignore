@@ -5,6 +5,7 @@
 
 # libraries folder
 Libraries
+glad.c
 
 # User-specific files
 *.rsuser
