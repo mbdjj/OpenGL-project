@@ -62,7 +62,7 @@ int main() {
     // Tworzenie Element Buffer Object
     EBO EBO1(indices, sizeof(indices));
 
-    // Po³¹czenie VBO do VAO
+    // Po³¹czenie atrybutów VBO takich jak koordynaty i kolory do VAO
     VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 6 * sizeof(float), (void*)0);
     VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     // Odbindowanie wszystkiego aby zapobiec przypadkowej modyfikacji
@@ -70,6 +70,7 @@ int main() {
     VBO1.Unbind();
     EBO1.Unbind();
 
+    // Zdobycie ID uniformu nazwanego "scale"
     GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
 
     // G³ówna pêtla while
@@ -79,7 +80,8 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
         // Powiedzenie OpenGL, którego programu shader u¿yæ
         shaderProgram.Activate();
-        glUniform1f(uniID, 2.0f);
+        // Przypisanie wartoœci uniformowi; ZAWSZE PO aktywacji shader programu
+        glUniform1f(uniID, 0.5f);
         //Bindowanie VAO aby OpenGL wiedzia³ ¿eby go u¿yæ
         VAO1.Bind();
         // Rysowanie trójk¹ta
