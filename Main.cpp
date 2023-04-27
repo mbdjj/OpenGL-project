@@ -11,6 +11,7 @@
 #include "VAO.h"
 #include "VBO.h"
 #include "EBO.h"
+#include "Camera.h"
 
 const unsigned int width = 800;
 const unsigned int height = 800;
@@ -82,19 +83,15 @@ int main() {
     VBO1.Unbind();
     EBO1.Unbind();
 
-    // Zdobycie ID uniformu nazwanego "scale"
-    GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
-
     // Tekstura
     Texture popCat("brick.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
     popCat.texUnit(shaderProgram, "tex0", 0);
 
-    // Zmienne pomagaj¹ce przy obracaniu piramidy
-    float rotation = 0.0f;
-    double prevTime = glfwGetTime();
-
     // W³¹czenie buffera g³êbokoœci
     glEnable(GL_DEPTH_TEST);
+
+    // Tworzenie obiektu kamery
+    Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
     // G³ówna pêtla while
     while (!glfwWindowShouldClose(window)) {
@@ -104,35 +101,14 @@ int main() {
         // Powiedzenie OpenGL, którego programu shader u¿yæ
         shaderProgram.Activate();
 
-        // Prosty timer
-        double currentTime = glfwGetTime();
-        if (currentTime - prevTime >= 1 / 60) {
-            rotation += 0.5f;
-            prevTime = currentTime;
-        }
+        // Sterowanie kamer¹ za pomoc¹ klawiatury i myszy
+        camera.Inputs(window);
+        // Uaktualnienie matrycy kamery i wyeksportowanie jej do vertex shadera
+        camera.Matrix(45.0f, 0.1f, 100.0f, shaderProgram, "camMatrix");
 
-        // Inicjalizacja matryc, aby nie by³y puste
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view = glm::mat4(1.0f);
-        glm::mat4 proj = glm::mat4(1.0f);
-
-        // Nadanie ró¿nych transformacji matrycom
-        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0, 1.0, 0.0));
-        view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f));
-        proj = glm::perspective(glm::radians(45.0f), (float)(width / height), 0.1f, 100.0f);
-
-        // Wyprowadzenie matryc do vertex shadera
-        int modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        int viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        int projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-
-        // Przypisanie wartoœci uniformowi; ZAWSZE PO aktywacji shader programu
-        glUniform1f(uniID, 0.5f);
+        // Binodowanie tekstury, aby pokaza³a siê przy renederowaniu
         popCat.Bind();
-        //Bindowanie VAO aby OpenGL wiedzia³ ¿eby go u¿yæ
+        // Bindowanie VAO aby OpenGL wiedzia³ ¿eby go u¿yæ
         VAO1.Bind();
         // Rysowanie trójk¹tów
         glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
